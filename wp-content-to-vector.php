@@ -1,4 +1,20 @@
+
 <?php
+/**
+ * Plugin Name: WordPress Content to Vector Exporter
+ * Plugin URI: https://github.com/Kontena2000/wordpress_plugin
+ * Description: Export WordPress content to vector databases with comprehensive logging and scheduling capabilities
+ * Version: 1.0.0
+ * Author: Softgen
+ * Author URI: https://github.com/Kontena2000
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: wp-content-to-vector
+ * Domain Path: /languages
+ * Requires at least: 5.0
+ * Requires PHP: 7.4
+ */
+
 if (!defined('ABSPATH')) exit;
 
 require_once plugin_dir_path(__FILE__) . 'includes/class-admin.php';
@@ -42,6 +58,21 @@ class WPContentToVector {
         add_action('admin_init', array($this, 'registerSettings'));
         add_action('wp_content_to_vector_cron', array($this, 'scheduledExport'));
         add_action('wp_ajax_get_export_progress', array($this, 'getExportProgress'));
+        
+        add_action('admin_enqueue_scripts', array($this, 'enqueueAdminAssets'));
+    }
+
+    public function enqueueAdminAssets($hook) {
+        if (strpos($hook, 'wp-content-to-vector') === false) {
+            return;
+        }
+        
+        wp_enqueue_style('wp-content-to-vector-admin', plugins_url('css/admin.css', __FILE__));
+        wp_enqueue_script('wp-content-to-vector-admin', plugins_url('js/admin.js', __FILE__), array('jquery'), '1.0.0', true);
+        wp_localize_script('wp-content-to-vector-admin', 'wpContentToVector', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('wp_content_to_vector_nonce')
+        ));
     }
 
     public function getExportLogFile() { return $this->export_log_file; }
